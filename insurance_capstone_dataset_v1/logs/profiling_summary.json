@@ -1,0 +1,196 @@
+[
+  {
+    "entity": "members",
+    "total_rows": 260000,
+    "columns": [
+      "member_id",
+      "first_name",
+      "last_name",
+      "full_name",
+      "email",
+      "gender",
+      "city",
+      "state",
+      "phone",
+      "dob",
+      "created_at",
+      "is_active"
+    ],
+    "missing_values": {
+      "first_name": 10500,
+      "email": 10500,
+      "city": 10500
+    },
+    "duplicate_pk": {
+      "member_id": 6000
+    },
+    "orphan_fk": {},
+    "negative_values": {},
+    "non_numeric": {},
+    "future_dates": {
+      "dob": 22880
+    }
+  },
+  {
+    "entity": "providers",
+    "total_rows": 40000,
+    "columns": [
+      "provider_id",
+      "provider_name",
+      "specialty",
+      "city",
+      "state",
+      "tax_id",
+      "license_no"
+    ],
+    "missing_values": {
+      "specialty": 433
+    },
+    "duplicate_pk": {
+      "provider_id": 1250
+    },
+    "orphan_fk": {},
+    "negative_values": {},
+    "non_numeric": {},
+    "future_dates": {}
+  },
+  {
+    "entity": "claims",
+    "total_rows": 240000,
+    "columns": [
+      "claim_number",
+      "member_id",
+      "provider_id",
+      "admit_date",
+      "discharge_date",
+      "length_of_stay",
+      "allowed_amount",
+      "paid_amount",
+      "denial_code"
+    ],
+    "missing_values": {
+      "denial_code": 115184
+    },
+    "duplicate_pk": {
+      "claim_number": 7500
+    },
+    "orphan_fk": {
+      "member_id": 30000,
+      "provider_id": 30000
+    },
+    "negative_values": {
+      "allowed_amount": 30000,
+      "length_of_stay": 2291
+    },
+    "non_numeric": {
+      "paid_amount": 30000
+    },
+    "future_dates": {
+      "admit_date": 75
+    }
+  },
+  {
+    "entity": "claim_lines",
+    "total_rows": 760000,
+    "columns": [
+      "line_id",
+      "claim_number",
+      "service_date",
+      "procedure_code",
+      "units",
+      "rate",
+      "line_amount"
+    ],
+    "missing_values": {
+      "procedure_code": 21
+    },
+    "duplicate_pk": {
+      "line_id": 27500
+    },
+    "orphan_fk": {
+      "claim_number": 110000
+    },
+    "negative_values": {
+      "units": 110000,
+      "line_amount": 110000
+    },
+    "non_numeric": {
+      "rate": 110000
+    },
+    "future_dates": {
+      "service_date": 329
+    }
+  },
+  {
+    "entity": "payments",
+    "total_rows": 100000,
+    "columns": [
+      "payment_id",
+      "claim_number",
+      "payment_date",
+      "payment_method",
+      "paid_amount",
+      "adjustment_code"
+    ],
+    "missing_values": {
+      "payment_method": 8013,
+      "adjustment_code": 54903
+    },
+    "duplicate_pk": {
+      "payment_id": 10000
+    },
+    "orphan_fk": {
+      "claim_number": 40000
+    },
+    "negative_values": {},
+    "non_numeric": {
+      "paid_amount": 40000
+    },
+    "future_dates": {
+      "payment_date": 104
+    }
+  },
+  {
+    "entity": "diagnoses",
+    "total_rows": 60000,
+    "columns": [
+      "diag_id",
+      "claim_number",
+      "diagnosis_code",
+      "icd_version"
+    ],
+    "missing_values": {
+      "diagnosis_code": 3
+    },
+    "duplicate_pk": {
+      "diag_id": 5000
+    },
+    "orphan_fk": {
+      "claim_number": 20000
+    },
+    "negative_values": {},
+    "non_numeric": {},
+    "future_dates": {}
+  },
+  {
+    "entity": "procedures",
+    "total_rows": 40000,
+    "columns": [
+      "proc_id",
+      "line_id",
+      "procedure_code"
+    ],
+    "missing_values": {
+      "procedure_code": 6
+    },
+    "duplicate_pk": {
+      "proc_id": 3750
+    },
+    "orphan_fk": {
+      "line_id": 15000
+    },
+    "negative_values": {},
+    "non_numeric": {},
+    "future_dates": {}
+  }
+]

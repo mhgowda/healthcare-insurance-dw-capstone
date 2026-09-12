@@ -1,0 +1,37 @@
+# ── Python cache ─────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# ── Virtual environments ──────────────────────────────────────
+venv/
+.venv/
+env/
+
+# ── Database (auto-generated, too large for GitHub) ──────────
+output/warehouse.db
+
+# ── Jupyter checkpoints ───────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── OS files ──────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editor settings ───────────────────────────────────────────
+.vscode/
+.idea/
+
+# ── Secrets / env files ───────────────────────────────────────
+.env
+*.env
+
+# ── What we DO keep in git ────────────────────────────────────
+# output/charts/         (PNG charts - small, good to show)
+# output/rejected_rows/  (CSV audit files)
+# output/*.csv           (query results)
+# logs/                  (profiling + masking audit)
+# All .py, .sql, .ipynb, .md files

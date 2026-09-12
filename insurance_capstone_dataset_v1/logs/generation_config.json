@@ -1,0 +1,6 @@
+{
+  "version": "healthcare-v1.0-fast",
+  "faker_locale": "en_IN",
+  "quick": 1.0,
+  "write_parquet": false
+}

@@ -1,0 +1,34 @@
+# ── Large source CSV files (too big for GitHub, ~500MB total) ─
+insurance_capstone_dataset_v1/data/
+
+# ── Old complex ETL folder (not part of the capstone submission) ─
+etl/
+analytics/
+tests/
+sql/
+visualizations/
+
+# ── Python cache ──────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+
+# ── Virtual environments ──────────────────────────────────────
+venv/
+.venv/
+
+# ── Secrets ───────────────────────────────────────────────────
+.env
+
+# ── OS files ──────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Editor ────────────────────────────────────────────────────
+.vscode/
+.idea/
+
+# ── What IS pushed ────────────────────────────────────────────
+# capstone/          (all your project files)
+# insurance_capstone_dataset_v1/logs/  (json logs)
+# README.md, requirements.txt etc.

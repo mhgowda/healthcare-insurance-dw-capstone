@@ -1,0 +1,3 @@
+# Only two packages needed — both are beginner-friendly
+pandas>=2.0.0
+matplotlib>=3.8.0

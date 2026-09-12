@@ -1,0 +1,76 @@
+{
+  "run_at": "2026-09-12T11:04:28.517842+00:00",
+  "masking_salt_used": true,
+  "fields_masked": [
+    {
+      "entity": "members",
+      "field": "member_id",
+      "rows_masked": 232207
+    },
+    {
+      "entity": "members",
+      "field": "email",
+      "rows_masked": 232207
+    },
+    {
+      "entity": "members",
+      "field": "phone",
+      "rows_masked": 232207
+    },
+    {
+      "entity": "members",
+      "field": "dob->birth_year",
+      "rows_masked": 232207
+    },
+    {
+      "entity": "providers",
+      "field": "provider_id",
+      "rows_masked": 38424
+    },
+    {
+      "entity": "providers",
+      "field": "tax_id",
+      "rows_masked": 38424
+    },
+    {
+      "entity": "providers",
+      "field": "license_no",
+      "rows_masked": 38424
+    },
+    {
+      "entity": "claims",
+      "field": "claim_number",
+      "rows_masked": 208640
+    },
+    {
+      "entity": "claim_lines",
+      "field": "line_id",
+      "rows_masked": 645733
+    },
+    {
+      "entity": "claim_lines",
+      "field": "claim_number",
+      "rows_masked": 645733
+    },
+    {
+      "entity": "payments",
+      "field": "payment_id",
+      "rows_masked": 59615
+    },
+    {
+      "entity": "payments",
+      "field": "claim_number",
+      "rows_masked": 59615
+    },
+    {
+      "entity": "diagnoses",
+      "field": "claim_number",
+      "rows_masked": 39741
+    },
+    {
+      "entity": "procedures",
+      "field": "line_id",
+      "rows_masked": 24844
+    }
+  ]
+}

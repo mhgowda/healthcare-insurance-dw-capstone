@@ -1,0 +1,27 @@
+# Core data stack
+pandas>=2.2.0
+numpy>=1.26.0
+
+# PostgreSQL driver
+psycopg2-binary>=2.9.9
+
+# SQLAlchemy ORM / engine
+sqlalchemy>=2.0.0
+
+# Environment variable loading
+python-dotenv>=1.0.0
+
+# Visualisation
+matplotlib>=3.8.0
+seaborn>=0.13.0
+
+# Testing
+pytest>=8.0.0
+pytest-mock>=3.14.0
+
+# Progress bars (optional, used in ETL)
+tqdm>=4.66.0
+
+# Dataset generation (already used, optional)
+scikit-learn>=1.4.0
+Faker>=24.0.0

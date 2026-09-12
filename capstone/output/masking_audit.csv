@@ -1,0 +1,15 @@
+entity,field,masked_count
+members,member_id,232207
+members,email,232207
+members,phone,232207
+members,dob→birth_year,232207
+providers,provider_id,38424
+providers,tax_id,38424
+providers,license_no,38424
+claims,claim_number,208640
+claim_lines,line_id,645733
+claim_lines,claim_number,645733
+payments,payment_id,59615
+payments,claim_number,59615
+diagnoses,claim_number,39741
+procedures,line_id,24844
