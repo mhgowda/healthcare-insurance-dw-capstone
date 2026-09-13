@@ -94,7 +94,7 @@ def slide_title(s, title, subtitle=""):
       sz=24, bold=True, color=WHITE, align=PP_ALIGN.LEFT)
     if subtitle:
         T(s, subtitle, 0.35, 0.47, 10, 0.28,
-          sz=12, color=LTBLUE, align=PP_ALIGN.LEFT)
+          sz=12, color=RGBColor(0xFF, 0xFF, 0xFF), align=PP_ALIGN.LEFT)
     # teal underline
     R(s, 0.35, 0.78, 3.5, 0.055, TEAL)
 
@@ -705,31 +705,102 @@ T(s, "Outputs: warehouse.db  |  rejected_rows/*.csv  |  "
 # ═══════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 light_bg(s)
-slide_title(s, "Data Quality Challenges", "Issues identified during profiling phase")
+
+# ── Slide header — fix subtitle visibility ───────────────────────────────
+T(s, "Data Quality Challenges", 0.35, 0.08, 12.6, 0.40,
+  sz=22, bold=True, color=WHITE, align=PP_ALIGN.LEFT)
+# Subtitle on its own WHITE background strip so it's always readable
+R(s, 0, 0.55, 13.33, 0.28, RGBColor(0xEE, 0xF2, 0xFA))
+T(s, "Issues identified during data profiling phase — 6 categories of bad data found in the source CSVs",
+  0.35, 0.58, 12.6, 0.22, sz=11, color=NAVY, align=PP_ALIGN.LEFT)
+R(s, 0.35, 0.82, 3.5, 0.05, TEAL)   # teal underline
+
+# ── 6 issue cards — 3 columns x 2 rows, fills the slide ─────────────────
+# Card area: y from 0.92 to 7.28 = 6.36 inches total
+# 2 rows with gap: card_h = (6.36 - 0.18) / 2 = 3.09
+# 3 cols with gap: card_w = (13.33 - 0.18*4) / 3 = 4.17
+
+CW   = 4.17   # card width
+CH   = 2.92   # card height
+CGAP = 0.18   # gap between cards
+CX0  = 0.18   # left margin
+CY0  = 0.92   # top start
 
 issues = [
-    ("Missing Values",        "Blank or NULL fields in required columns",
-     "first_name, email, city, diagnosis_code, specialty",   BLUE),
-    ("Orphan Foreign Keys",   "__ORPHAN__ marker where a valid parent ID is expected",
-     "member_id in claims, claim_number in payments",         RED),
-    ("Negative Amounts",      "Invalid negative values in financial columns",
-     "allowed_amount, paid_amount, units, line_amount",       ORANGE),
-    ("Future Dates",          "Dates that should not exist (past events in the future)",
-     "admit_date, service_date, DOB, payment_date",           PURPLE),
-    ("Duplicate Primary Keys","Same ID appearing more than once in the same file",
-     "claim_number, member_id, provider_id, line_id",        TEAL),
-    ("Type Mismatches",       "Text values found in columns that must be numeric",
-     "paid_amount = 'ERR', rate = 'MISSING', LOS = 'TEXT'",  GREEN),
+    ("Missing Values",
+     "Blank or NULL in required fields",
+     "Affects: first_name, email, city, diagnosis_code, specialty",
+     BLUE,
+     "27,793 member rows  |  1,576 provider rows  |  3 diagnosis rows"),
+
+    ("Orphan Foreign Keys",
+     "__ORPHAN__ marker where parent record is missing",
+     "Affects: member_id in claims, claim_number in payments/diagnoses",
+     RED,
+     "30,000 orphan member_id  |  40,000 orphan claim_number in payments"),
+
+    ("Negative Amounts",
+     "Invalid negative values in financial columns",
+     "Affects: allowed_amount, paid_amount, units, line_amount",
+     ORANGE,
+     "30,000 negative allowed_amount  |  110,000 negative units"),
+
+    ("Future Dates",
+     "Timestamps set in the future (impossible for past events)",
+     "Affects: admit_date, service_date, dob, payment_date",
+     PURPLE,
+     "22,880 future DOB  |  75 future admit_date  |  329 future service_date"),
+
+    ("Duplicate Primary Keys",
+     "Same primary key value appearing more than once",
+     "Affects: claim_number, member_id, provider_id, line_id",
+     TEAL,
+     "7,500 duplicate claim_number  |  6,000 duplicate member_id"),
+
+    ("Type Mismatches",
+     "Text values found where numeric data is required",
+     "Affects: paid_amount, rate, length_of_stay (LOS)",
+     GREEN,
+     "paid_amount = 'ERR'  |  rate = 'MISSING'  |  40,000+ rows affected"),
 ]
-for i, (title, desc, cols, col) in enumerate(issues):
-    cx = 0.25 + (i % 3) * 4.35
-    cy = 1.05 + (i // 3) * 2.8
-    R(s, cx, cy, 4.2, 2.55, col)
-    R(s, cx, cy, 4.2, 0.5, NAVY)
-    T(s, title, cx+0.15, cy+0.06, 3.9, 0.38, sz=13, bold=True, color=WHITE)
-    T(s, desc,  cx+0.15, cy+0.6,  3.9, 0.7,  sz=11, color=WHITE)
-    T(s, "Columns: "+cols, cx+0.15, cy+1.35, 3.9, 0.9,
-      sz=9, italic=True, color=RGBColor(0xDD,0xEE,0xFF))
+
+for i, (title, desc, cols, col, stat) in enumerate(issues):
+    col_i = i % 3
+    row_i = i // 3
+    cx = CX0 + col_i * (CW + CGAP)
+    cy = CY0 + row_i * (CH + CGAP)
+
+    # Card background — full colour
+    R(s, cx, cy, CW, CH, col)
+
+    # Dark header strip
+    R(s, cx, cy, CW, 0.42, NAVY)
+    T(s, title, cx+0.14, cy+0.07, CW-0.20, 0.30,
+      sz=12, bold=True, color=WHITE)
+
+    # Description — large clear text
+    T(s, desc, cx+0.14, cy+0.50, CW-0.22, 0.52,
+      sz=11, color=WHITE, bold=False)
+
+    # Columns affected — light label + value
+    R(s, cx+0.10, cy+1.08, CW-0.20, 0.02, RGBColor(0xFF,0xFF,0xFF))  # divider
+    T(s, "Columns affected:", cx+0.14, cy+1.14, CW-0.22, 0.20,
+      sz=9, bold=True, color=RGBColor(0xFF,0xFF,0xCC))
+    T(s, cols.replace("Affects: ", ""), cx+0.14, cy+1.34, CW-0.22, 0.42,
+      sz=9, color=WHITE)
+
+    # Stat pill at bottom — darker shade of card color
+    stat_colors = {
+        BLUE:   RGBColor(0x0F, 0x52, 0x9A),
+        RED:    RGBColor(0xB0, 0x20, 0x20),
+        ORANGE: RGBColor(0xBF, 0x56, 0x00),
+        PURPLE: RGBColor(0x4A, 0x0D, 0x6E),
+        TEAL:   RGBColor(0x00, 0x88, 0x76),
+        GREEN:  RGBColor(0x1B, 0x5E, 0x20),
+    }
+    R(s, cx+0.10, cy+CH-0.52, CW-0.20, 0.42, stat_colors.get(col, NAVY))
+    T(s, stat, cx+0.18, cy+CH-0.46, CW-0.30, 0.36,
+      sz=8, color=WHITE, italic=True)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
