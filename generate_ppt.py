@@ -83,20 +83,20 @@ def dark_bg(s):
     R(s, 11.0, 0, 2.33, 7.5, RGBColor(0x10, 0x23, 0x4E))
 
 def light_bg(s):
-    """Light slide background with coloured top bar."""
+    """Light slide background with coloured top bar — tall enough for title + subtitle."""
     R(s, 0, 0, 13.33, 7.5, OFFWH)
-    R(s, 0, 0, 13.33, 0.55, NAVY)
+    R(s, 0, 0, 13.33, 0.82, NAVY)   # taller bar covers both title and subtitle
     R(s, 0, 7.3, 13.33, 0.20, NAVY)
 
 def slide_title(s, title, subtitle=""):
-    """Standard slide title block."""
-    T(s, title, 0.35, 0.08, 12.6, 0.42,
-      sz=24, bold=True, color=WHITE, align=PP_ALIGN.LEFT)
+    """Standard slide title block — both lines sit inside the dark navy bar."""
+    T(s, title, 0.35, 0.06, 12.6, 0.38,
+      sz=22, bold=True, color=WHITE, align=PP_ALIGN.LEFT)
     if subtitle:
-        T(s, subtitle, 0.35, 0.47, 10, 0.28,
-          sz=12, color=RGBColor(0xFF, 0xFF, 0xFF), align=PP_ALIGN.LEFT)
-    # teal underline
-    R(s, 0.35, 0.78, 3.5, 0.055, TEAL)
+        T(s, subtitle, 0.35, 0.44, 12.2, 0.26,
+          sz=11, color=RGBColor(0xA8, 0xC8, 0xF0), align=PP_ALIGN.LEFT)
+    # teal underline sits just below the dark bar
+    R(s, 0.35, 0.80, 3.5, 0.04, TEAL)
 
 def section_divider(s, number, title, sub=""):
     """Full-bleed section divider slide."""
