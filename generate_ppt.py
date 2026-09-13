@@ -261,99 +261,212 @@ for i, (t, b) in enumerate(issues):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# SLIDE 4 — ER DIAGRAM (Entity Relationship)
+# SLIDE 4 — ER DIAGRAM
 # ═══════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 light_bg(s)
-slide_title(s, "Entity Relationship Diagram", "Source system relationships before warehouse transformation")
+slide_title(s, "Entity Relationship Diagram",
+            "Source system — table structures and foreign key relationships")
 
-def er_box(sl, x, y, w, h, name, fields, hcol, is_pk_fk=True):
-    """Draw an ER entity box with header + field rows."""
-    R(sl, x, y, w, 0.38, hcol)
-    T(sl, name, x+0.1, y+0.04, w-0.15, 0.3, sz=11, bold=True, color=WHITE)
-    for j, (fname, ftype, flag) in enumerate(fields):
-        bg = RGBColor(0xFF,0xFF,0xEE) if flag == "PK" else \
-             RGBColor(0xFF,0xF0,0xFF) if flag == "FK" else WHITE
-        R(sl, x, y+0.38+j*0.27, w, 0.26, bg)
-        hline(sl, x, y+0.38+j*0.27, w, LTGRAY)
-        # PK/FK badge
+# ── ER table drawing function ───────────────────────────────────────────────
+# Each table: header bar + alternating field rows
+# field tuples: (field_name, data_type, flag)  flag = "PK" | "FK" | ""
+
+ROW_H   = 0.265   # height of each field row
+HDR_H   = 0.36    # height of header bar
+PK_COL  = RGBColor(0xFF, 0xA0, 0x00)   # amber for PK badge
+FK_COL  = RGBColor(0x6A, 0x1B, 0x9A)   # purple for FK badge
+F1_COL  = WHITE
+F2_COL  = RGBColor(0xF4, 0xF6, 0xFB)   # very light stripe
+
+def er_table(sl, x, y, w, name, fields, hdr_color):
+    """Draw one ER entity box — header + field rows, perfectly aligned."""
+    total_h = HDR_H + len(fields) * ROW_H + 0.05
+    # outer border
+    border = sl.shapes.add_shape(1, Inches(x-0.02), Inches(y-0.02),
+                                  Inches(w+0.04), Inches(total_h+0.04))
+    border.fill.solid(); border.fill.fore_color.rgb = RGBColor(0xCC,0xD6,0xE8)
+    border.line.fill.background()
+
+    # header
+    R(sl, x, y, w, HDR_H, hdr_color)
+    T(sl, name, x+0.12, y+0.06, w-0.18, HDR_H-0.08,
+      sz=11, bold=True, color=WHITE)
+
+    # field rows
+    for i, (fname, ftype, flag) in enumerate(fields):
+        fy  = y + HDR_H + i * ROW_H
+        fbg = F1_COL if i % 2 == 0 else F2_COL
+        R(sl, x, fy, w, ROW_H, fbg)
+        # thin separator
+        R(sl, x, fy, w, 0.012, RGBColor(0xDD,0xE4,0xEE))
+
         if flag:
-            R(sl, x+0.05, y+0.42+j*0.27, 0.28, 0.18,
-              GOLD if flag=="PK" else PURPLE)
-            T(sl, flag, x+0.05, y+0.41+j*0.27, 0.28, 0.19,
-              sz=7, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
-        T(sl, fname, x+0.38, y+0.42+j*0.27, w-0.55, 0.2,
-          sz=9, color=DARK)
-        T(sl, ftype, x+w-1.05, y+0.42+j*0.27, 0.98, 0.2,
-          sz=8, color=GRAY, italic=True)
+            badge_col = PK_COL if flag == "PK" else FK_COL
+            R(sl, x+0.06, fy+0.05, 0.26, 0.165, badge_col)
+            T(sl, flag, x+0.06, fy+0.045, 0.26, 0.175,
+              sz=6, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
+            T(sl, fname, x+0.38, fy+0.05, w*0.52, 0.2,
+              sz=9, color=DARK, bold=(flag == "PK"))
+        else:
+            T(sl, fname, x+0.12, fy+0.05, w*0.58, 0.2, sz=9, color=DARK)
 
-# members
-er_box(s, 0.15, 0.92, 2.9, 2.0, "MEMBERS",
-    [("member_id","VARCHAR","PK"),("first_name","VARCHAR",""),
-     ("email","VARCHAR",""),("phone","VARCHAR",""),
-     ("dob","DATE",""),("city / state","VARCHAR",""),
-     ("is_active","BOOLEAN","")], BLUE)
+        T(sl, ftype, x+w-1.05, fy+0.06, 0.98, 0.185,
+          sz=8, color=GRAY, italic=True, align=PP_ALIGN.RIGHT)
 
-# providers
-er_box(s, 0.15, 4.05, 2.9, 2.0, "PROVIDERS",
-    [("provider_id","VARCHAR","PK"),("provider_name","VARCHAR",""),
-     ("specialty","VARCHAR",""),("city / state","VARCHAR",""),
-     ("tax_id","VARCHAR",""),("license_no","VARCHAR","")], TEAL)
+    return total_h
 
-# claims (centre top)
-er_box(s, 3.35, 0.92, 3.1, 2.0, "CLAIMS",
-    [("claim_number","VARCHAR","PK"),("member_id","VARCHAR","FK"),
-     ("provider_id","VARCHAR","FK"),("admit_date","DATE",""),
-     ("paid_amount","NUMERIC",""),("denial_code","VARCHAR",""),
-     ("length_of_stay","INT","")], NAVY)
+# ── Layout: 3-column grid ────────────────────────────────────────────────
+# Column X positions
+C1 = 0.18    # left
+C2 = 4.55    # centre
+C3 = 8.92    # right
+TW = 4.18    # table width
 
-# claim_lines (centre mid)
-er_box(s, 3.35, 3.45, 3.1, 2.0, "CLAIM_LINES",
-    [("line_id","VARCHAR","PK"),("claim_number","VARCHAR","FK"),
-     ("procedure_code","VARCHAR",""),("service_date","DATE",""),
-     ("units","INT",""),("rate","NUMERIC",""),
-     ("line_amount","NUMERIC","")], NAVY)
+# Row Y positions
+R1 = 0.92    # top row
+R2 = 4.05    # bottom row  (adjusted after measuring actual table heights)
 
-# payments (right top)
-er_box(s, 6.7, 0.92, 3.0, 2.0, "PAYMENTS",
-    [("payment_id","VARCHAR","PK"),("claim_number","VARCHAR","FK"),
-     ("payment_date","DATE",""),("payment_method","VARCHAR",""),
-     ("paid_amount","NUMERIC",""),("adjustment_code","VARCHAR","")], ORANGE)
+# Top row tables
+h_mem  = er_table(s, C1, R1, TW, "MEMBERS",
+    [("member_id",    "VARCHAR", "PK"),
+     ("first_name",   "VARCHAR", ""),
+     ("last_name",    "VARCHAR", ""),
+     ("email",        "VARCHAR", ""),
+     ("phone",        "VARCHAR", ""),
+     ("dob",          "DATE",    ""),
+     ("city",         "VARCHAR", ""),
+     ("state",        "VARCHAR", ""),
+     ("is_active",    "BOOLEAN", "")], BLUE)
 
-# diagnoses (right mid)
-er_box(s, 6.7, 3.45, 3.0, 2.0, "DIAGNOSES",
-    [("diag_id","VARCHAR","PK"),("claim_number","VARCHAR","FK"),
-     ("diagnosis_code","VARCHAR",""),("icd_version","VARCHAR","")], RED)
+h_cla  = er_table(s, C2, R1, TW, "CLAIMS",
+    [("claim_number",  "VARCHAR", "PK"),
+     ("member_id",     "VARCHAR", "FK"),
+     ("provider_id",   "VARCHAR", "FK"),
+     ("admit_date",    "DATE",    ""),
+     ("discharge_date","DATE",    ""),
+     ("length_of_stay","INT",     ""),
+     ("allowed_amount","NUMERIC", ""),
+     ("paid_amount",   "NUMERIC", ""),
+     ("denial_code",   "VARCHAR", "")], NAVY)
 
-# procedures (far right)
-er_box(s, 10.0, 3.45, 3.1, 2.0, "PROCEDURES",
-    [("proc_id","VARCHAR","PK"),("line_id","VARCHAR","FK"),
-     ("procedure_code","VARCHAR","")], PURPLE)
+h_pay  = er_table(s, C3, R1, TW, "PAYMENTS",
+    [("payment_id",     "VARCHAR", "PK"),
+     ("claim_number",   "VARCHAR", "FK"),
+     ("payment_date",   "DATE",    ""),
+     ("payment_method", "VARCHAR", ""),
+     ("paid_amount",    "NUMERIC", ""),
+     ("adjustment_code","VARCHAR", "")], ORANGE)
 
-# Relationship lines
-# members -> claims
-hline(s, 3.05, 1.75, 0.3, BLUE, 0.03)
-# providers -> claims
-hline(s, 3.05, 4.7,  0.3, TEAL, 0.03)
-vline(s, 3.08, 2.2, 2.5, TEAL, 0.03)
-# claims -> payments
-hline(s, 6.45, 1.75, 0.25, NAVY, 0.03)
-# claims -> claim_lines
-vline(s, 4.9,  2.92, 0.53, NAVY, 0.03)
-# claims -> diagnoses
-hline(s, 6.45, 2.3, 0.25, RED, 0.03)
-vline(s, 6.68, 2.3, 1.75, RED, 0.03)
-# claim_lines -> procedures
-hline(s, 6.45, 4.45, 3.55, PURPLE, 0.03)
+# Bottom row tables — positioned exactly below top row + gap
+GAP = 0.22
+R2_actual = R1 + max(h_mem, h_cla, h_pay) + GAP
 
-# Legend
-R(s, 9.8, 0.92, 3.3, 1.6, LTGRAY)
-T(s, "LEGEND", 9.95, 0.98, 3.1, 0.32, sz=11, bold=True, color=NAVY)
-for ly, lc, lt in [(1.32, GOLD, "PK = Primary Key"),
-                   (1.6,  PURPLE, "FK = Foreign Key"),
-                   (1.88, NAVY, "Line = Relationship")]:
-    R(s, 9.95, ly, 0.28, 0.2, lc)
-    T(s, lt, 10.3, ly, 2.5, 0.22, sz=10, color=DARK)
+h_prv  = er_table(s, C1, R2_actual, TW, "PROVIDERS",
+    [("provider_id",   "VARCHAR", "PK"),
+     ("provider_name", "VARCHAR", ""),
+     ("specialty",     "VARCHAR", ""),
+     ("city",          "VARCHAR", ""),
+     ("state",         "VARCHAR", ""),
+     ("tax_id",        "VARCHAR", ""),
+     ("license_no",    "VARCHAR", "")], TEAL)
+
+h_cl   = er_table(s, C2, R2_actual, TW, "CLAIM_LINES",
+    [("line_id",        "VARCHAR", "PK"),
+     ("claim_number",   "VARCHAR", "FK"),
+     ("service_date",   "DATE",    ""),
+     ("procedure_code", "VARCHAR", ""),
+     ("units",          "INT",     ""),
+     ("rate",           "NUMERIC", ""),
+     ("line_amount",    "NUMERIC", "")], NAVY)
+
+h_diag = er_table(s, C3, R2_actual, TW, "DIAGNOSES",
+    [("diag_id",        "VARCHAR", "PK"),
+     ("claim_number",   "VARCHAR", "FK"),
+     ("diagnosis_code", "VARCHAR", ""),
+     ("icd_version",    "VARCHAR", "")], RED)
+
+# ── Relationship connector lines ─────────────────────────────────────────
+# All connectors use the exact midpoints of table edges
+
+def mid_right(tx, ty, tw, th):
+    """Right-edge midpoint of a table."""
+    return tx + tw, ty + th / 2
+
+def mid_left(tx, ty, th):
+    """Left-edge midpoint of a table."""
+    return tx, ty + th / 2
+
+def mid_bottom(tx, ty, tw, th):
+    """Bottom-edge midpoint of a table."""
+    return tx + tw / 2, ty + th
+
+def mid_top(tx, ty, tw):
+    """Top-edge midpoint of a table."""
+    return tx + tw / 2, ty
+
+LTHICK = 0.03
+
+# 1. MEMBERS right -> CLAIMS left  (member_id FK)
+mx, my = mid_right(C1, R1, TW, h_mem)
+cx, cy = mid_left(C2, R1, h_cla)
+# horizontal bridge
+hline(s, mx, my - LTHICK/2, cx - mx, BLUE, LTHICK)
+
+# 2. PROVIDERS right -> CLAIMS left  (provider_id FK)
+# providers is on row2, claims on row1 — need L-shaped connector
+px, py  = mid_right(C1, R2_actual, TW, h_prv)
+cx2, cy2 = mid_left(C2, R1, h_cla)
+mid_x = C2 - 0.18
+hline(s, px, py, mid_x - px, TEAL, LTHICK)
+vline(s, mid_x, cy2, py - cy2, TEAL, LTHICK)
+hline(s, mid_x, cy2, C2 - mid_x, TEAL, LTHICK)
+
+# 3. CLAIMS right -> PAYMENTS left  (claim_number FK)
+clx, cly = mid_right(C2, R1, TW, h_cla)
+payx, payy = mid_left(C3, R1, h_pay)
+hline(s, clx, cly - LTHICK/2, payx - clx, NAVY, LTHICK)
+
+# 4. CLAIMS bottom -> CLAIM_LINES top  (claim_number FK)
+clbx, clby = mid_bottom(C2, R1, TW, h_cla)
+cltx, clty = mid_top(C2, R2_actual, TW)
+# vertical connector between same column
+vline(s, clbx, clby, clty - clby, NAVY, LTHICK)
+
+# 5. CLAIMS right -> DIAGNOSES left  (claim_number FK)
+# L-shaped: right of claims (row1) -> right, down, to right of diagnoses (row2)
+clrx, clry = mid_right(C2, R1, TW, h_cla)
+dglx, dgly = mid_left(C3, R2_actual, h_diag)
+bridge_x = C3 - 0.15
+hline(s, clrx, clry, bridge_x - clrx, RED, LTHICK)
+vline(s, bridge_x, clry, dgly - clry, RED, LTHICK)
+hline(s, bridge_x, dgly, C3 - bridge_x, RED, LTHICK)
+
+# 6. CLAIM_LINES right -> PAYMENTS (no direct relation — skip)
+# 7. PROVIDERS bottom -> CLAIM_LINES left  (via claim -> claim_lines, no direct)
+
+# ── Legend box ──────────────────────────────────────────────────────────────
+# Place legend in bottom-right corner if space allows
+leg_x = C3 + TW + 0.15
+leg_y = R2_actual
+leg_w = 13.13 - leg_x
+if leg_w < 0.5:
+    leg_x = 0.18
+    leg_y = R2_actual + h_diag + 0.15
+    leg_w = TW
+
+R(s, leg_x, leg_y, leg_w, 1.05, RGBColor(0xEE,0xF2,0xFA))
+R(s, leg_x, leg_y, leg_w, 0.30, NAVY)
+T(s, "LEGEND", leg_x+0.1, leg_y+0.05, leg_w-0.15, 0.22,
+  sz=10, bold=True, color=WHITE)
+for li, (lc, lt) in enumerate([
+    (PK_COL,  "PK  Primary Key"),
+    (FK_COL,  "FK  Foreign Key"),
+    (NAVY,    "Line  Relationship"),
+]):
+    ly2 = leg_y + 0.36 + li * 0.24
+    R(s, leg_x+0.1, ly2, 0.22, 0.165, lc)
+    T(s, lt, leg_x+0.38, ly2, leg_w-0.45, 0.185, sz=9, color=DARK)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -362,87 +475,189 @@ for ly, lc, lt in [(1.32, GOLD, "PK = Primary Key"),
 s = prs.slides.add_slide(BLANK)
 light_bg(s)
 slide_title(s, "Star Schema  –  Data Warehouse Design",
-            "Fact tables surrounded by dimension tables for fast analytical queries")
+            "Dimensional model: fact tables (numbers) surrounded by dimension tables (descriptions)")
 
-def dw_box(sl, x, y, w, h, name, cols_list, is_fact=False):
-    hc = NAVY if is_fact else BLUE
-    bc = RGBColor(0xE8,0xF0,0xFE) if not is_fact else RGBColor(0xE8,0xED,0xF5)
-    R(sl, x, y, w, h, bc)
-    R(sl, x, y, w, 0.35, hc)
-    badge = "FACT" if is_fact else "DIM"
-    bc2   = GOLD if is_fact else TEAL
-    R(sl, x+0.07, y+0.06, 0.42, 0.22, bc2)
-    T(sl, badge, x+0.07, y+0.05, 0.42, 0.24, sz=7, bold=True,
-      color=DARK if not is_fact else DARK, align=PP_ALIGN.CENTER)
-    T(sl, name, x+0.55, y+0.05, w-0.65, 0.28, sz=11, bold=True, color=WHITE)
-    for j, col in enumerate(cols_list):
-        R(sl, x+0.05, y+0.4+j*0.22, w-0.1, 0.2,
-          WHITE if j%2==0 else LTGRAY)
-        T(sl, col, x+0.1, y+0.41+j*0.22, w-0.2, 0.19, sz=8, color=DARK)
+# ── DW box drawing function ──────────────────────────────────────────────
+DW_HDR  = 0.35
+DW_ROW  = 0.235
+DW_F1   = WHITE
+DW_F2   = RGBColor(0xF0,0xF4,0xFB)
 
-# dim_date (top centre)
-dw_box(s, 5.3, 0.9, 2.7, 1.85, "dim_date",
-       ["date_key (PK)", "year, quarter", "month, month_name", "day_name, is_weekend"])
+def dw_table(sl, x, y, w, name, badge, badge_col, hdr_col, fields):
+    """Draw one star-schema box with badge, header, and field rows."""
+    total_h = DW_HDR + len(fields) * DW_ROW + 0.04
+    # shadow / border
+    bdr = sl.shapes.add_shape(1, Inches(x+0.04), Inches(y+0.04),
+                               Inches(w), Inches(total_h))
+    bdr.fill.solid(); bdr.fill.fore_color.rgb = RGBColor(0xC8,0xD2,0xE4)
+    bdr.line.fill.background()
+    # main box
+    R(sl, x, y, w, total_h, RGBColor(0xFA,0xFC,0xFF))
+    # header
+    R(sl, x, y, w, DW_HDR, hdr_col)
+    # badge pill
+    R(sl, x+0.08, y+0.07, 0.52, 0.21, badge_col)
+    T(sl, badge, x+0.08, y+0.065, 0.52, 0.22,
+      sz=7, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
+    T(sl, name, x+0.66, y+0.055, w-0.72, 0.26,
+      sz=10, bold=True, color=WHITE)
+    # fields
+    for i, fld in enumerate(fields):
+        fy  = y + DW_HDR + i * DW_ROW
+        fbg = DW_F1 if i % 2 == 0 else DW_F2
+        R(sl, x, fy, w, DW_ROW, fbg)
+        R(sl, x, fy, w, 0.01, RGBColor(0xE0,0xE8,0xF4))
+        T(sl, fld, x+0.12, fy+0.03, w-0.18, DW_ROW-0.04, sz=8, color=DARK)
+    return total_h
 
-# dim_member (left top)
-dw_box(s, 0.2, 0.9, 2.75, 2.1, "dim_member",
-       ["member_id (PK) masked", "gender", "city, state", "birth_year", "is_active"])
+# ── Grid layout — fixed coordinates ────────────────────────────────────
+# Slide usable area: x 0.18–13.15,  y 0.88–7.28
+# Layout:
+#   Row 1 (y=0.88):  dim_member  | [gap] dim_date [gap] |  dim_provider
+#   Row 2 (y=3.05):  fact_claim_line | fact_claim | fact_payment
+#   Row 3 (y=5.45):  dim_diagnosis | dim_location | dim_procedure
 
-# dim_provider (right top)
-dw_box(s, 10.35, 0.9, 2.75, 2.1, "dim_provider",
-       ["provider_id (PK) masked", "specialty", "city, state",
-        "tax_id masked", "license_no masked"])
+DW = 3.62    # box width
+G  = 0.245   # gap between boxes
 
-# fact_claim (centre)
-dw_box(s, 5.0, 3.1, 3.3, 2.5, "fact_claim",
-       ["claim_number (PK)", "member_id (FK)", "provider_id (FK)",
-        "admit_date_key (FK)", "length_of_stay",
-        "allowed_amount, paid_amount", "denial_code, is_denied"], is_fact=True)
+# Column left edges (3 columns, evenly spaced)
+X1 = 0.18
+X2 = X1 + DW + G
+X3 = X2 + DW + G
 
-# fact_claim_line (left bottom)
-dw_box(s, 0.2, 3.9, 2.75, 2.1, "fact_claim_line",
-       ["line_id (PK)", "claim_number (FK)", "service_date_key (FK)",
-        "procedure_code (FK)", "units, rate, line_amount"])
+Y1 = 0.88
+Y2 = 3.20
+Y3 = 5.50
 
-# fact_payment (right bottom)
-dw_box(s, 10.35, 3.9, 2.75, 2.1, "fact_payment",
-       ["payment_id (PK)", "claim_number (FK)", "payment_date_key (FK)",
-        "payment_method", "paid_amount"])
+# Row 1
+h_dm  = dw_table(s, X1, Y1, DW, "dim_member",   "DIM", TEAL, BLUE,
+    ["member_id  (PK) — masked",
+     "gender",
+     "city,  state",
+     "birth_year",
+     "is_active"])
 
-# dim_diagnosis (left far)
-dw_box(s, 0.2, 6.15, 2.75, 1.0, "dim_diagnosis",
-       ["diagnosis_code (PK)", "icd_version"])
+h_dd  = dw_table(s, X2, Y1, DW, "dim_date",     "DIM", TEAL, BLUE,
+    ["date_key  (PK)",
+     "year,  quarter,  month",
+     "month_name",
+     "day_name,  is_weekend"])
 
-# dim_procedure (right far)
-dw_box(s, 10.35, 6.15, 2.75, 1.0, "dim_procedure",
-       ["procedure_code (PK)"])
+h_dp  = dw_table(s, X3, Y1, DW, "dim_provider", "DIM", TEAL, BLUE,
+    ["provider_id  (PK) — masked",
+     "specialty",
+     "city,  state",
+     "tax_id — masked",
+     "license_no — masked"])
 
-# dim_location (bottom)
-dw_box(s, 5.45, 6.15, 2.85, 1.0, "dim_location",
-       ["location_key (PK)", "city, state"])
+# Row 2 — fact tables
+h_fcl = dw_table(s, X1, Y2, DW, "fact_claim_line", "FACT", GOLD, NAVY,
+    ["line_id  (PK)",
+     "claim_number  (FK)",
+     "service_date_key  (FK)",
+     "procedure_code  (FK)",
+     "units,  rate,  line_amount"])
 
-# Connectors
-cx_fact = 6.65  # centre-x of fact_claim
-cy_fact = 4.35  # centre-y of fact_claim
-# dim_member -> fact_claim
-hline(s, 2.95, 2.1, 2.05, BLUE, 0.03)
-vline(s, 4.98, 2.1, 1.0, BLUE, 0.03)
-# dim_provider -> fact_claim
-hline(s, 8.3, 2.1, 2.05, BLUE, 0.03)
-vline(s, 8.28, 2.1, 1.0, BLUE, 0.03)
-# dim_date -> fact_claim
-vline(s, 6.65, 2.75, 0.35, BLUE, 0.03)
-# fact_claim -> fact_claim_line
-hline(s, 2.95, 4.35, 2.05, NAVY, 0.03)
-# fact_claim -> fact_payment
-hline(s, 8.3, 4.35, 2.05, NAVY, 0.03)
-# fact_claim_line -> dim_diagnosis
-vline(s, 1.57, 6.0, 0.15, TEAL, 0.03)
-# fact_claim_line -> dim_procedure
-hline(s, 2.95, 5.35, 7.4, TEAL, 0.03)
-vline(s, 10.33, 5.35, 0.8, TEAL, 0.03)
-# fact_claim -> dim_location
-vline(s, 6.88, 5.6, 0.55, ORANGE, 0.03)
+h_fc  = dw_table(s, X2, Y2, DW, "fact_claim",      "FACT", GOLD, NAVY,
+    ["claim_number  (PK)",
+     "member_id  (FK)",
+     "provider_id  (FK)",
+     "admit_date_key  (FK)",
+     "length_of_stay",
+     "allowed_amount,  paid_amount",
+     "denial_code,  is_denied"])
+
+h_fp  = dw_table(s, X3, Y2, DW, "fact_payment",    "FACT", GOLD, NAVY,
+    ["payment_id  (PK)",
+     "claim_number  (FK)",
+     "payment_date_key  (FK)",
+     "payment_method",
+     "paid_amount"])
+
+# Row 3 — remaining dims
+h_ddiag = dw_table(s, X1, Y3, DW, "dim_diagnosis", "DIM", TEAL, BLUE,
+    ["diagnosis_code  (PK)",
+     "icd_version"])
+
+h_dloc  = dw_table(s, X2, Y3, DW, "dim_location",  "DIM", TEAL, BLUE,
+    ["location_key  (PK)",
+     "city,  state"])
+
+h_dproc = dw_table(s, X3, Y3, DW, "dim_procedure", "DIM", TEAL, BLUE,
+    ["procedure_code  (PK)"])
+
+# ── Connectors — precise midpoints ──────────────────────────────────────
+# Helper: midpoint of each edge
+def top_mid(x, y, w):    return x + w/2, y
+def bot_mid(x, y, w, h): return x + w/2, y + h
+def lft_mid(x, y, h):    return x,       y + h/2
+def rgt_mid(x, y, w, h): return x + w,   y + h/2
+
+C_THICK = 0.028
+C_DIM   = TEAL
+C_FACT  = NAVY
+
+# dim_member  (row1) -> fact_claim (row2): vertical from bottom of dm to top of fc
+dmb_x, dmb_y = bot_mid(X1, Y1, DW, h_dm)
+fct_x, fct_y = top_mid(X2, Y2, DW)
+# L-shape: down from dm, right to fc centre-x
+vline(s, dmb_x, dmb_y, Y2 - 0.18 - dmb_y, C_DIM, C_THICK)
+hline(s, dmb_x, Y2 - 0.18, fct_x - dmb_x, C_DIM, C_THICK)
+vline(s, fct_x, Y2 - 0.18, 0.18, C_DIM, C_THICK)
+
+# dim_date (row1) -> fact_claim (row2): straight vertical (same column X2)
+ddb_x, ddb_y = bot_mid(X2, Y1, DW, h_dd)
+vline(s, ddb_x, ddb_y, fct_y - ddb_y, C_DIM, C_THICK)
+
+# dim_provider (row1) -> fact_claim (row2): mirror of dim_member
+dpb_x, dpb_y = bot_mid(X3, Y1, DW, h_dp)
+vline(s, dpb_x, dpb_y, Y2 - 0.18 - dpb_y, C_DIM, C_THICK)
+hline(s, fct_x, Y2 - 0.18, dpb_x - fct_x, C_DIM, C_THICK)
+vline(s, dpb_x, Y2 - 0.18, 0.18, C_DIM, C_THICK)
+
+# fact_claim (row2) -> fact_claim_line (row2): horizontal between same row
+fcrx, fcry = lft_mid(X2, Y2, h_fc)
+fclrx, fclry = rgt_mid(X1, Y2, DW, h_fcl)
+hline(s, fclrx, fclry, fcrx - fclrx, C_FACT, C_THICK)
+
+# fact_claim (row2) -> fact_payment (row2): horizontal
+fcrx2, fcry2 = rgt_mid(X2, Y2, DW, h_fc)
+fplx,  fply  = lft_mid(X3, Y2, h_fp)
+hline(s, fcrx2, fcry2, fplx - fcrx2, C_FACT, C_THICK)
+
+# fact_claim_line (row2) -> dim_diagnosis (row3): vertical
+fclt_x, fclt_y = bot_mid(X1, Y2, DW, h_fcl)
+ddt_x,  ddt_y  = top_mid(X1, Y3, DW)
+vline(s, fclt_x, fclt_y, ddt_y - fclt_y, C_DIM, C_THICK)
+
+# fact_claim (row2) -> dim_location (row3): vertical same column
+fcbt_x, fcbt_y = bot_mid(X2, Y2, DW, h_fc)
+dlct_x, dlct_y = top_mid(X2, Y3, DW)
+vline(s, fcbt_x, fcbt_y, dlct_y - fcbt_y, C_DIM, C_THICK)
+
+# fact_claim_line (row2) -> dim_procedure (row3): L-shape
+fclb_x, fclb_y = bot_mid(X1, Y2, DW, h_fcl)
+dpt_x,  dpt_y  = top_mid(X3, Y3, DW)
+mid_y3 = Y3 - 0.15
+hline(s, fclb_x, mid_y3, dpt_x - fclb_x, C_DIM, C_THICK)
+vline(s, dpt_x,  mid_y3, dpt_y - mid_y3,  C_DIM, C_THICK)
+
+# fact_payment (row2) -> dim_procedure (row3): vertical same column
+fpbt_x, fpbt_y = bot_mid(X3, Y2, DW, h_fp)
+vline(s, fpbt_x, fpbt_y, dpt_y - fpbt_y, C_DIM, C_THICK)
+
+# ── Legend ───────────────────────────────────────────────────────────────
+# Small legend at bottom right — doesn't exist as separate box, inline text
+R(s, 0.18, 7.08, 12.97, 0.22, RGBColor(0xE8,0xED,0xF8))
+legend_items = [
+    (GOLD,  "FACT = Fact Table (stores measurable data)"),
+    (TEAL,  "DIM = Dimension Table (stores descriptive data)"),
+    (NAVY,  "Lines = Relationships between tables"),
+]
+for li, (lc, lt) in enumerate(legend_items):
+    lx = 0.28 + li * 4.35
+    R(s, lx, 7.1, 0.22, 0.165, lc)
+    T(s, lt, lx+0.28, 7.1, 4.0, 0.165, sz=9, color=DARK)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
