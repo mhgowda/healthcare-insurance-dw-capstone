@@ -1,34 +1,48 @@
-# ── Large source CSV files (too big for GitHub, ~500MB total) ─
+# Source CSV files (too large for GitHub ~500MB)
 insurance_capstone_dataset_v1/data/
 
-# ── Old complex ETL folder (not part of the capstone submission) ─
-etl/
-analytics/
-tests/
-sql/
-visualizations/
-
-# ── Python cache ──────────────────────────────────────────────
+# Python cache
 __pycache__/
 *.pyc
 *.pyo
 
-# ── Virtual environments ──────────────────────────────────────
+# Virtual environments
 venv/
 .venv/
 
-# ── Secrets ───────────────────────────────────────────────────
+# Secrets
 .env
+*.env
 
-# ── OS files ──────────────────────────────────────────────────
+# SQLite warehouse (auto-generated, too large)
+capstone/output/warehouse.db
+
+# Word and PowerPoint temp lock files
+~$*
+
+# OS files
 .DS_Store
 Thumbs.db
 
-# ── Editor ────────────────────────────────────────────────────
+# Editor settings
 .vscode/
 .idea/
 
-# ── What IS pushed ────────────────────────────────────────────
-# capstone/          (all your project files)
-# insurance_capstone_dataset_v1/logs/  (json logs)
-# README.md, requirements.txt etc.
+# Old/duplicate PPT versions
+Healthcare_Insurance_DW_Capstone_new.pptx
+Healthcare_Insurance_DW_Capstone_v*.pptx
+Healthcare_Insurance_DW_Capstone_fix.pptx
+
+# Duplicate report at root (canonical copy is in presentation_pack/)
+/Healthcare_Insurance_DW_Report.docx
+
+# Generator scripts (not needed by users)
+/generate_ppt.py
+/generate_report.py
+
+# Old complex ETL folder (superseded by capstone/)
+/etl/
+/analytics/
+/tests/
+/sql/
+/visualizations/

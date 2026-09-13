@@ -1,11 +1,3 @@
--- ============================================================
--- DAY 1 – Star Schema DDL
--- Healthcare Insurance Claims Data Warehouse
---
--- Run this in SQLite (used by step4_load_full.py) OR
--- copy into Snowflake / PostgreSQL with minor adjustments.
--- ============================================================
-
 -- ── DIMENSION: dim_date ──────────────────────────────────────
 -- Stores every calendar date we need, with useful breakdowns
 CREATE TABLE IF NOT EXISTS dim_date (
