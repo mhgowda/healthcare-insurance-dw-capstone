@@ -268,74 +268,65 @@ light_bg(s)
 slide_title(s, "Entity Relationship Diagram",
             "Source system table structures and foreign key relationships")
 
-# ── Compact ER table constants ───────────────────────────────────────────
-ER_HDR  = 0.30    # header bar height
-ER_ROW  = 0.215   # each field row height  (tight but readable)
-ER_BORD = RGBColor(0xC4, 0xCF, 0xE0)   # border/shadow colour
+# ── ER table constants ────────────────────────────────────────────────────
+ER_HDR  = 0.30
+ER_ROW  = 0.210
+ER_BORD = RGBColor(0xC4, 0xCF, 0xE0)
 ER_F1   = WHITE
-ER_F2   = RGBColor(0xF6, 0xF8, 0xFC)
-ER_PK   = RGBColor(0xF5, 0x9E, 0x0B)   # amber  - PK badge
-ER_FK   = RGBColor(0x6A, 0x1B, 0x9A)   # purple - FK badge
+ER_F2   = RGBColor(0xF5, 0xF8, 0xFD)
+ER_PK   = RGBColor(0xF5, 0x9E, 0x0B)
+ER_FK   = RGBColor(0x6A, 0x1B, 0x9A)
 
 def er_box(sl, x, y, w, name, fields, hdr_col):
-    """
-    Professional compact ER entity.
-    fields = list of (field_name, data_type, flag)  flag in ("PK","FK","")
-    Returns total height.
-    """
     n   = len(fields)
     tot = ER_HDR + n * ER_ROW + 0.03
-
-    # 1-px drop shadow
-    sh = sl.shapes.add_shape(1,
-        Inches(x+0.025), Inches(y+0.025), Inches(w), Inches(tot))
+    sh  = sl.shapes.add_shape(1,
+        Inches(x+0.02), Inches(y+0.02), Inches(w), Inches(tot))
     sh.fill.solid(); sh.fill.fore_color.rgb = ER_BORD
     sh.line.fill.background()
-
-    # White body
     R(sl, x, y, w, tot, WHITE)
-
-    # Coloured header
     R(sl, x, y, w, ER_HDR, hdr_col)
     T(sl, name, x+0.10, y+0.055, w-0.15, ER_HDR-0.07,
       sz=9, bold=True, color=WHITE)
-
-    # Field rows
     for i, (fname, ftype, flag) in enumerate(fields):
         fy  = y + ER_HDR + i * ER_ROW
         fbg = ER_F1 if i % 2 == 0 else ER_F2
         R(sl, x, fy, w, ER_ROW, fbg)
-        # hairline separator
         R(sl, x, fy, w, 0.008, RGBColor(0xE4, 0xE9, 0xF3))
-
         if flag:
             bc = ER_PK if flag == "PK" else ER_FK
-            R(sl, x+0.05, fy+0.04, 0.23, 0.14, bc)
-            T(sl, flag, x+0.05, fy+0.037, 0.23, 0.15,
+            R(sl, x+0.05, fy+0.04, 0.22, 0.135, bc)
+            T(sl, flag, x+0.05, fy+0.037, 0.22, 0.145,
               sz=5, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
-            T(sl, fname, x+0.32, fy+0.04, w-0.70, 0.175,
+            T(sl, fname, x+0.31, fy+0.04, w-0.68, 0.17,
               sz=8, bold=(flag == "PK"), color=DARK)
         else:
-            T(sl, fname, x+0.10, fy+0.04, w-0.65, 0.175, sz=8, color=DARK)
-
-        # data type right-aligned
-        T(sl, ftype, x+w-0.85, fy+0.045, 0.78, 0.16,
+            T(sl, fname, x+0.10, fy+0.04, w-0.62, 0.17, sz=8, color=DARK)
+        T(sl, ftype, x+w-0.82, fy+0.045, 0.75, 0.16,
           sz=7, italic=True, color=GRAY, align=PP_ALIGN.RIGHT)
-
     return tot
 
-# ── 3-column grid — compact spacing ─────────────────────────────────────
-# Three equal columns: MEMBERS | CLAIMS | PAYMENTS  (top row)
-#                      PROVIDERS | CLAIM_LINES | DIAGNOSES + PROCEDURES (bottom)
-# Use a tighter column width so all 3 fit with padding
-EC1 = 0.18
-EC2 = 4.60
-EC3 = 9.02
-ETW = 4.20    # table width per column
+# ── Layout ────────────────────────────────────────────────────────────────
+# Row 1 (top): MEMBERS | CLAIMS | PAYMENTS   — 3 cols, equal width
+# Row 2 (bot): PROVIDERS | CLAIM_LINES | DIAGNOSES | PROCEDURES — 4 cols
 
-EY1 = 0.92   # top row Y
+# Row 1: 3 equal columns
+R1W  = 4.18   # width per table
+R1G  = 0.19   # gap
+R1C1 = 0.18
+R1C2 = R1C1 + R1W + R1G
+R1C3 = R1C2 + R1W + R1G
+EY1  = 0.93
 
-eh_mem = er_box(s, EC1, EY1, ETW, "MEMBERS",
+# Row 2: 4 equal columns
+R2W  = 3.02   # width per table  (4 * 3.02 + 3 * 0.18 = 12.62 < 13.15 ok)
+R2G  = 0.18
+R2C1 = 0.18
+R2C2 = R2C1 + R2W + R2G
+R2C3 = R2C2 + R2W + R2G
+R2C4 = R2C3 + R2W + R2G
+
+eh_mem = er_box(s, R1C1, EY1, R1W, "MEMBERS",
     [("member_id",     "VARCHAR", "PK"),
      ("first_name",    "VARCHAR", ""),
      ("email",         "VARCHAR", ""),
@@ -344,7 +335,7 @@ eh_mem = er_box(s, EC1, EY1, ETW, "MEMBERS",
      ("city / state",  "VARCHAR", ""),
      ("is_active",     "BOOLEAN", "")], BLUE)
 
-eh_cla = er_box(s, EC2, EY1, ETW, "CLAIMS",
+eh_cla = er_box(s, R1C2, EY1, R1W, "CLAIMS",
     [("claim_number",   "VARCHAR", "PK"),
      ("member_id",      "VARCHAR", "FK"),
      ("provider_id",    "VARCHAR", "FK"),
@@ -354,7 +345,7 @@ eh_cla = er_box(s, EC2, EY1, ETW, "CLAIMS",
      ("denial_code",    "VARCHAR", ""),
      ("length_of_stay", "INT",     "")], NAVY)
 
-eh_pay = er_box(s, EC3, EY1, ETW, "PAYMENTS",
+eh_pay = er_box(s, R1C3, EY1, R1W, "PAYMENTS",
     [("payment_id",      "VARCHAR", "PK"),
      ("claim_number",    "VARCHAR", "FK"),
      ("payment_date",    "DATE",    ""),
@@ -362,99 +353,99 @@ eh_pay = er_box(s, EC3, EY1, ETW, "PAYMENTS",
      ("paid_amount",     "NUMERIC", ""),
      ("adjustment_code", "VARCHAR", "")], ORANGE)
 
-EY2 = EY1 + max(eh_mem, eh_cla, eh_pay) + 0.20   # gap between rows
+EY2 = EY1 + max(eh_mem, eh_cla, eh_pay) + 0.20
 
-eh_prv = er_box(s, EC1, EY2, ETW, "PROVIDERS",
-    [("provider_id",    "VARCHAR", "PK"),
-     ("provider_name",  "VARCHAR", ""),
-     ("specialty",      "VARCHAR", ""),
-     ("city / state",   "VARCHAR", ""),
-     ("tax_id",         "VARCHAR", ""),
-     ("license_no",     "VARCHAR", "")], TEAL)
+eh_prv = er_box(s, R2C1, EY2, R2W, "PROVIDERS",
+    [("provider_id",   "VARCHAR", "PK"),
+     ("provider_name", "VARCHAR", ""),
+     ("specialty",     "VARCHAR", ""),
+     ("city / state",  "VARCHAR", ""),
+     ("tax_id",        "VARCHAR", ""),
+     ("license_no",    "VARCHAR", "")], TEAL)
 
-eh_cl  = er_box(s, EC2, EY2, ETW, "CLAIM_LINES",
-    [("line_id",         "VARCHAR", "PK"),
-     ("claim_number",    "VARCHAR", "FK"),
-     ("service_date",    "DATE",    ""),
-     ("procedure_code",  "VARCHAR", ""),
-     ("units",           "INT",     ""),
-     ("rate",            "NUMERIC", ""),
-     ("line_amount",     "NUMERIC", "")], NAVY)
+eh_cl = er_box(s, R2C2, EY2, R2W, "CLAIM_LINES",
+    [("line_id",        "VARCHAR", "PK"),
+     ("claim_number",   "VARCHAR", "FK"),
+     ("service_date",   "DATE",    ""),
+     ("procedure_code", "VARCHAR", ""),
+     ("units",          "INT",     ""),
+     ("rate",           "NUMERIC", ""),
+     ("line_amount",    "NUMERIC", "")], NAVY)
 
-# Diagnoses and Procedures side by side in column 3
-EHW = ETW * 0.50 - 0.05   # half width
-eh_dx  = er_box(s, EC3,         EY2, EHW, "DIAGNOSES",
+eh_dx = er_box(s, R2C3, EY2, R2W, "DIAGNOSES",
     [("diag_id",        "VARCHAR", "PK"),
      ("claim_number",   "VARCHAR", "FK"),
-     ("diag_code",      "VARCHAR", ""),
+     ("diagnosis_code", "VARCHAR", ""),
      ("icd_version",    "VARCHAR", "")], RED)
 
-eh_pr  = er_box(s, EC3+EHW+0.10, EY2, EHW, "PROCEDURES",
+eh_pr = er_box(s, R2C4, EY2, R2W, "PROCEDURES",
     [("proc_id",        "VARCHAR", "PK"),
      ("line_id",        "VARCHAR", "FK"),
      ("procedure_code", "VARCHAR", "")], PURPLE)
 
-# ── Relationship lines (L-shaped, using precise edge midpoints) ──────────
-LT = 0.025   # line thickness
+# ── Connectors ────────────────────────────────────────────────────────────
+LT = 0.024
 
-def rm(x, y, w, h):   return x+w, y+h*0.5   # right mid
-def lm(x, y, h):      return x,   y+h*0.5   # left mid
-def bm(x, y, w, h):   return x+w*0.5, y+h   # bottom mid
-def tm(x, y, w):      return x+w*0.5, y     # top mid
+def _rm(x, y, w, h): return x+w,      y+h*0.5
+def _lm(x, y, h):    return x,        y+h*0.5
+def _bm(x, y, w, h): return x+w*0.5,  y+h
+def _tm(x, y, w):    return x+w*0.5,  y
 
-# 1. MEMBERS -> CLAIMS  (member_id FK) horizontal
-ax, ay = rm(EC1, EY1, ETW, eh_mem)
-bx, by = lm(EC2, EY1, eh_cla)
+# Channel Y between rows — midpoint of the gap
+ch_y = EY2 - (EY2 - (EY1 + max(eh_mem, eh_cla, eh_pay))) * 0.5 - 0.04
+
+# 1. MEMBERS right -> CLAIMS left
+ax, ay = _rm(R1C1, EY1, R1W, eh_mem)
+bx, by = _lm(R1C2, EY1, eh_cla)
 hline(s, ax, ay, bx-ax, BLUE, LT)
 
-# 2. PROVIDERS -> CLAIMS (provider_id FK) L-shape up from row2 to row1
-ax2, ay2 = rm(EC1, EY2, ETW, eh_prv)
-bx2, by2 = lm(EC2, EY1, eh_cla)
-mx2 = EC2 - 0.14
-hline(s, ax2, ay2, mx2-ax2, TEAL, LT)
-vline(s, mx2, by2, ay2-by2, TEAL, LT)
-hline(s, mx2, by2, EC2-mx2, TEAL, LT)
+# 2. CLAIMS right -> PAYMENTS left
+ax2, ay2 = _rm(R1C2, EY1, R1W, eh_cla)
+bx2, by2 = _lm(R1C3, EY1, eh_pay)
+hline(s, ax2, ay2, bx2-ax2, NAVY, LT)
 
-# 3. CLAIMS -> PAYMENTS  horizontal
-ax3, ay3 = rm(EC2, EY1, ETW, eh_cla)
-bx3, by3 = lm(EC3, EY1, eh_pay)
-hline(s, ax3, ay3, bx3-ax3, NAVY, LT)
+# 3. CLAIMS bottom -> CLAIM_LINES top  (vertical, both col2/col3 area)
+#    CLAIMS centre-x  vs CLAIM_LINES centre-x differ, use L-shape
+clm_cx  = R1C2 + R1W/2   # centre of CLAIMS
+cl_cx   = R2C2 + R2W/2   # centre of CLAIM_LINES
+cl_bot  = EY1 + eh_cla
+cl_top  = EY2
+vline(s, clm_cx, cl_bot, ch_y - cl_bot, NAVY, LT)
+hline(s, cl_cx,  ch_y,   clm_cx - cl_cx, NAVY, LT)
+vline(s, cl_cx,  ch_y,   cl_top - ch_y,  NAVY, LT)
 
-# 4. CLAIMS -> CLAIM_LINES  vertical same column
-ax4, ay4 = bm(EC2, EY1, ETW, eh_cla)
-bx4, by4 = tm(EC2, EY2, ETW)
-vline(s, ax4, ay4, by4-ay4, NAVY, LT)
+# 4. MEMBERS bottom -> PROVIDERS top  (vertical, both col1)
+mem_cx = R1C1 + R1W/2
+prv_cx = R2C1 + R2W/2
+vline(s, mem_cx, EY1+eh_mem, ch_y - (EY1+eh_mem), BLUE, LT)
+hline(s, prv_cx, ch_y, mem_cx - prv_cx, BLUE, LT)
+vline(s, prv_cx, ch_y, EY2 - ch_y, BLUE, LT)
 
-# 5. CLAIMS -> DIAGNOSES  L-shape right then down
-ax5, ay5 = rm(EC2, EY1, ETW, eh_cla)
-bx5, by5 = tm(EC3, EY2, EHW)
-r5 = EC3 + EHW/2
-hline(s, ax5, ay5, r5-ax5, RED, LT)
-vline(s, r5,  ay5, by5-ay5, RED, LT)
+# 5. CLAIMS bottom -> DIAGNOSES top  L-shape
+dx_cx = R2C3 + R2W/2
+vline(s, clm_cx, cl_bot, ch_y - cl_bot, RED, LT)
+hline(s, dx_cx,  ch_y,   clm_cx - dx_cx, RED, LT)
+vline(s, dx_cx,  ch_y,   EY2 - ch_y, RED, LT)
 
-# 6. CLAIM_LINES -> PROCEDURES  right then to procedures
-ax6, ay6 = rm(EC2, EY2, ETW, eh_cl)
-bx6, by6 = lm(EC3+EHW+0.10, EY2, eh_pr)
-hline(s, ax6, ay6, bx6-ax6, PURPLE, LT)
+# 6. CLAIM_LINES right -> PROCEDURES left
+cl_rgt = _rm(R2C2, EY2, R2W, eh_cl)
+pr_lft = _lm(R2C4, EY2, eh_pr)
+mid_x  = (cl_rgt[0] + pr_lft[0]) / 2
+hline(s, cl_rgt[0], cl_rgt[1], mid_x - cl_rgt[0], PURPLE, LT)
+vline(s, mid_x, min(cl_rgt[1], pr_lft[1]),
+     abs(cl_rgt[1] - pr_lft[1]), PURPLE, LT)
+hline(s, mid_x, pr_lft[1], pr_lft[0] - mid_x, PURPLE, LT)
 
-# ── Legend — right aligned, compact ─────────────────────────────────────
-LX = EC3 + ETW + 0.12
-LY = EY1
-LW = 13.15 - LX
-if LW < 0.3:
-    LX, LW = 0.18, ETW
-
-R(s, LX, LY, LW, 0.98, RGBColor(0xEE, 0xF2, 0xFA))
-R(s, LX, LY, LW, 0.26, NAVY)
-T(s, "LEGEND", LX+0.09, LY+0.04, LW-0.12, 0.20, sz=9, bold=True, color=WHITE)
+# ── Legend ────────────────────────────────────────────────────────────────
+R(s, 0.18, 7.05, 12.97, 0.25, RGBColor(0xEE, 0xF2, 0xFA))
 for li, (lc, lt) in enumerate([
-    (ER_PK, "PK - Primary Key"),
-    (ER_FK, "FK - Foreign Key"),
-    (NAVY,  "Line - Relationship"),
+    (ER_PK, "PK  Primary Key"),
+    (ER_FK, "FK  Foreign Key"),
+    (NAVY,  "Line  Relationship"),
 ]):
-    LRY = LY + 0.30 + li * 0.22
-    R(s, LX+0.09, LRY, 0.20, 0.14, lc)
-    T(s, lt, LX+0.34, LRY, LW-0.38, 0.16, sz=8, color=DARK)
+    lx = 0.30 + li * 4.35
+    R(s, lx, 7.075, 0.22, 0.155, lc)
+    T(s, lt, lx+0.28, 7.075, 3.9, 0.175, sz=9, color=DARK)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -520,9 +511,9 @@ SX1 = 0.18
 SX2 = SX1 + DW + DG
 SX3 = SX2 + DW + DG
 
-SY1 = 0.88   # dims row
-SY2 = 2.95   # facts row
-SY3 = 5.18   # bottom dims row
+SY1 = 0.93   # dims row  — starts just below the title bar + underline
+SY2 = 2.98   # facts row
+SY3 = 5.22   # bottom dims row
 
 # ── Row 1: dimension tables ──────────────────────────────────────────────
 h_dm  = dw_box(s, SX1, SY1, DW, "dim_member",   "DIM", TEAL, BLUE,
@@ -581,7 +572,7 @@ h_dloc  = dw_box(s, SX2, SY3, DW, "dim_location",  "DIM", TEAL, BLUE,
 h_dproc = dw_box(s, SX3, SY3, DW, "dim_procedure", "DIM", TEAL, BLUE,
     ["procedure_code  (PK)"])
 
-# ── Connectors ───────────────────────────────────────────────────────────
+# ── Connectors — route through a horizontal channel between row1 and row2 ──
 SC = 0.022   # connector thickness
 
 def sm_top(x, y, w):      return x+w*0.5, y
@@ -589,50 +580,58 @@ def sm_bot(x, y, w, h):   return x+w*0.5, y+h
 def sm_lft(x, y, h):      return x,        y+h*0.5
 def sm_rgt(x, y, w, h):   return x+w,      y+h*0.5
 
-C_DIM  = RGBColor(0x00, 0xA8, 0x95)   # muted teal for dim connectors
-C_FACT = RGBColor(0x2C, 0x4A, 0x80)   # muted navy for fact connectors
+C_DIM  = RGBColor(0x00, 0xA8, 0x95)
+C_FACT = RGBColor(0x2C, 0x4A, 0x80)
 
-# dim_member (row1 col1) -> fact_claim (row2 col2): L down then right
+# Routing channel Y — halfway between bottom of tallest row1 box and top of row2
+tallest_r1 = max(h_dm, h_dd, h_dp)
+ch_y = SY1 + tallest_r1 + (SY2 - (SY1 + tallest_r1)) * 0.5  # midpoint of gap
+
+fct_top = sm_top(SX2, SY2, DW)
+
+# dim_member (col1) -> fact_claim (col2): down to channel, right, down to fact
 dmb = sm_bot(SX1, SY1, DW, h_dm)
-fct = sm_top(SX2, SY2, DW)
-ry  = SY2 - 0.14
-vline(s, dmb[0], dmb[1], ry - dmb[1], C_DIM, SC)
-hline(s, dmb[0], ry, fct[0] - dmb[0], C_DIM, SC)
-vline(s, fct[0], ry, fct[1] - ry, C_DIM, SC)
+vline(s, dmb[0], dmb[1], ch_y - dmb[1], C_DIM, SC)
+hline(s, dmb[0], ch_y, fct_top[0] - dmb[0], C_DIM, SC)
+vline(s, fct_top[0], ch_y, fct_top[1] - ch_y, C_DIM, SC)
 
-# dim_date (row1 col2) -> fact_claim (row2 col2): straight vertical
+# dim_date (col2) -> fact_claim (col2): straight vertical
 ddb = sm_bot(SX2, SY1, DW, h_dd)
-vline(s, ddb[0], ddb[1], fct[1] - ddb[1], C_DIM, SC)
+vline(s, ddb[0], ddb[1], fct_top[1] - ddb[1], C_DIM, SC)
 
-# dim_provider (row1 col3) -> fact_claim (row2 col2): L down then left
+# dim_provider (col3) -> fact_claim (col2): down to channel, left, down to fact
 dpb = sm_bot(SX3, SY1, DW, h_dp)
-vline(s, dpb[0], dpb[1], ry - dpb[1], C_DIM, SC)
-hline(s, fct[0], ry, dpb[0] - fct[0], C_DIM, SC)
+vline(s, dpb[0], dpb[1], ch_y - dpb[1], C_DIM, SC)
+hline(s, fct_top[0], ch_y, dpb[0] - fct_top[0], C_DIM, SC)
 
-# fact_claim -> fact_claim_line: horizontal left
+# fact_claim_line (col1) <-> fact_claim (col2): horizontal
 fcl_r = sm_rgt(SX1, SY2, DW, h_fcl)
 fc_l  = sm_lft(SX2, SY2, h_fc)
-hline(s, fcl_r[0], fcl_r[1], fc_l[0]-fcl_r[0], C_FACT, SC)
+hline(s, fcl_r[0], fcl_r[1], fc_l[0] - fcl_r[0], C_FACT, SC)
 
-# fact_claim -> fact_payment: horizontal right
+# fact_claim (col2) <-> fact_payment (col3): horizontal
 fc_r  = sm_rgt(SX2, SY2, DW, h_fc)
 fp_l  = sm_lft(SX3, SY2, h_fp)
-hline(s, fc_r[0], fc_r[1], fp_l[0]-fc_r[0], C_FACT, SC)
+hline(s, fc_r[0], fc_r[1], fp_l[0] - fc_r[0], C_FACT, SC)
 
-# fact_claim_line -> dim_diagnosis: vertical down
+# Routing channel Y between row2 and row3
+tallest_r2 = max(h_fcl, h_fc, h_fp)
+ch_y2 = SY2 + tallest_r2 + (SY3 - (SY2 + tallest_r2)) * 0.5
+
+# fact_claim_line (col1) -> dim_diagnosis (col1): straight vertical
 fclb = sm_bot(SX1, SY2, DW, h_fcl)
-ddb2 = sm_top(SX1, SY3, DW)
-vline(s, fclb[0], fclb[1], ddb2[1]-fclb[1], C_DIM, SC)
+ddt  = sm_top(SX1, SY3, DW)
+vline(s, fclb[0], fclb[1], ddt[1] - fclb[1], C_DIM, SC)
 
-# fact_claim -> dim_location: vertical down
+# fact_claim (col2) -> dim_location (col2): straight vertical
 fcb  = sm_bot(SX2, SY2, DW, h_fc)
-dlb  = sm_top(SX2, SY3, DW)
-vline(s, fcb[0], fcb[1], dlb[1]-fcb[1], C_DIM, SC)
+dlt  = sm_top(SX2, SY3, DW)
+vline(s, fcb[0], fcb[1], dlt[1] - fcb[1], C_DIM, SC)
 
-# fact_payment -> dim_procedure: vertical down
+# fact_payment (col3) -> dim_procedure (col3): straight vertical
 fpb  = sm_bot(SX3, SY2, DW, h_fp)
-dpb2 = sm_top(SX3, SY3, DW)
-vline(s, fpb[0], fpb[1], dpb2[1]-fpb[1], C_DIM, SC)
+dpt  = sm_top(SX3, SY3, DW)
+vline(s, fpb[0], fpb[1], dpt[1] - fpb[1], C_DIM, SC)
 
 # ── Legend bar at bottom ─────────────────────────────────────────────────
 R(s, 0.18, 7.08, 12.97, 0.22, RGBColor(0xE6, 0xEB, 0xF7))
@@ -705,26 +704,19 @@ T(s, "Outputs: warehouse.db  |  rejected_rows/*.csv  |  "
 # ═══════════════════════════════════════════════════════════════════════════
 s = prs.slides.add_slide(BLANK)
 light_bg(s)
-
-# ── Slide header — fix subtitle visibility ───────────────────────────────
-T(s, "Data Quality Challenges", 0.35, 0.08, 12.6, 0.40,
-  sz=22, bold=True, color=WHITE, align=PP_ALIGN.LEFT)
-# Subtitle on its own WHITE background strip so it's always readable
-R(s, 0, 0.55, 13.33, 0.28, RGBColor(0xEE, 0xF2, 0xFA))
-T(s, "Issues identified during data profiling phase — 6 categories of bad data found in the source CSVs",
-  0.35, 0.58, 12.6, 0.22, sz=11, color=NAVY, align=PP_ALIGN.LEFT)
-R(s, 0.35, 0.82, 3.5, 0.05, TEAL)   # teal underline
+slide_title(s, "Data Quality Challenges",
+            "Issues identified during data profiling phase  -  6 categories of bad data found in source CSVs")
 
 # ── 6 issue cards — 3 columns x 2 rows, fills the slide ─────────────────
 # Card area: y from 0.92 to 7.28 = 6.36 inches total
 # 2 rows with gap: card_h = (6.36 - 0.18) / 2 = 3.09
 # 3 cols with gap: card_w = (13.33 - 0.18*4) / 3 = 4.17
 
-CW   = 4.17   # card width
-CH   = 2.92   # card height
-CGAP = 0.18   # gap between cards
-CX0  = 0.18   # left margin
-CY0  = 0.92   # top start
+CW   = 4.17
+CH   = 2.92
+CGAP = 0.18
+CX0  = 0.18
+CY0  = 0.95   # start below title bar (0.82) + teal underline
 
 issues = [
     ("Missing Values",
